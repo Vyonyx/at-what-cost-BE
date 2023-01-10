@@ -2,15 +2,16 @@ import { Pool } from "pg";
 import { Request, Response } from "express";
 import { send } from "process";
 
-const USER = process.env.DB_USER
-const PORT = process.env.DB_PORT
-const HOST = process.env.DB_HOST
-const PASSWORD = process.env.DB_PASSWORD
+const DATABASE = process.env.PGDATABASE
+const USER = process.env.PGUSER
+const PORT = process.env.PGPORT
+const HOST = process.env.PGHOST
+const PASSWORD = process.env.PGPASSWORD
 
 const pool = new Pool({
   user: USER,
   host: HOST,
-  database: 'at_what_cost',
+  database: DATABASE,
   password: PASSWORD,
   port: Number(PORT) || 5432
 })
