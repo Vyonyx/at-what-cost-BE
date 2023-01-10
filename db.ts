@@ -18,11 +18,11 @@ const pool = new Pool({
 
 export const addFilter = (req: Request, res: Response) => {
   const userID = req.params.user_id
-  const { transaction_name, category } = req.body
+  const { transaction, category } = req.body
 
   pool.query(
-    `INSERT INTO filters (user_id, transaction_name, category) VALUES ($1, $2, $3)`,
-    [ userID, transaction_name, category ]
+    `INSERT INTO filters (user_id, transaction, category) VALUES ($1, $2, $3)`,
+    [ userID, transaction, category ]
   )
     .then(results => res.status(201).send(`New filter created for user ID: ${userID}`))
     .catch(error => {
@@ -44,11 +44,11 @@ export const getFilters = (req: Request, res: Response) => {
 
 export const editFilter = (req: Request, res: Response) => {
   const filterID = req.params.filter_id
-  const { transaction_name, category } = req.body
+  const { transaction, category } = req.body
 
   pool.query(
-    'UPDATE filters SET transaction_name = $1, category = $2 WHERE id = $3',
-    [transaction_name, category, filterID]
+    'UPDATE filters SET transaction = $1, category = $2 WHERE id = $3',
+    [transaction, category, filterID]
   )
     .then(results => res.send(200).send(`Filter ID: ${filterID} edited.`))
     .catch(error => {
