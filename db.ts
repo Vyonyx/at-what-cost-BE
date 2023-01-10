@@ -8,13 +8,15 @@ const PORT = process.env.PGPORT
 const HOST = process.env.PGHOST
 const PASSWORD = process.env.PGPASSWORD
 
-const pool = new Pool({
-  user: USER,
-  host: HOST,
-  database: DATABASE,
-  password: PASSWORD,
-  port: Number(PORT) || 5432
-})
+// const pool = new Pool({
+//   user: USER,
+//   host: HOST,
+//   database: DATABASE,
+//   password: PASSWORD,
+//   port: Number(PORT) || 5432
+// })
+
+const pool = new Pool()
 
 export const addFilter = (req: Request, res: Response) => {
   const userID = req.params.user_id
