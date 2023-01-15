@@ -70,7 +70,6 @@ export const addNewUser = (req: Request, res: Response) => {
   bcrypt
     .hash(password, saltRounds)
     .then((hash) => {
-      console.log(hash);
       pool
         .query(
           "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
@@ -80,4 +79,23 @@ export const addNewUser = (req: Request, res: Response) => {
         .catch((err) => res.status(500).json({ msg: err.message }));
     })
     .catch((err) => res.status(500).json({ msg: err.message }));
+};
+
+export const checkUser = async (req: Request, res: Response) => {
+  const { email, password } = JSON.parse(JSON.stringify(req.body));
+
+  try {
+    const user = await (
+      await pool.query(`SELECT * FROM users WHERE email = '${email}'`)
+    ).rows[0];
+
+    if (!user) {
+      return res.status(400).json({ msg: "User not found" });
+    }
+    const { password: hashedPassword } = user;
+    const isUser = await bcrypt.compare(password, hashedPassword);
+    res.status(200).json(isUser);
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
 };
