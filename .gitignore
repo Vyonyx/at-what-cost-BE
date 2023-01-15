@@ -1,5 +1,4 @@
 node_modules
 queries.ts
-routes/users.ts
 .env
 .eslintrc.json
