@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
+import cors from "cors";
 import filtersRouter from "./routes/filters";
 import usersRouter from "./routes/users";
 
@@ -11,6 +12,7 @@ const app = express();
 /* Configuration */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 /* Routes */
 app.use("/api/filters", filtersRouter);

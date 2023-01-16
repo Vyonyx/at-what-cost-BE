@@ -43,13 +43,13 @@ export const getFilters = async (req: Request, res: Response) => {
         filters: true,
       },
     });
+    console.log(user);
     res.status(200).json(user.filters);
   } catch (error) {
     console.error("Error: ", error.message);
     res.status(400).json({ msg: error.message });
   } finally {
     await prisma.$disconnect();
-    process.exit(1);
   }
 };
 
