@@ -2,8 +2,11 @@ import { Pool } from "pg";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
+dotenv.config();
 const pool = new Pool();
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const addFilter = (req: Request, res: Response) => {
   const userID = req.params.user_id;
@@ -64,22 +67,51 @@ export const deleteFilter = (req: Request, res: Response) => {
     });
 };
 
-export const addNewUser = (req: Request, res: Response) => {
+const checkEmptyStrings = (strArr: string[] | null[]) => {
+  let isInvalid = false;
+  strArr.forEach((str) => {
+    if (str.trim() === "" || str === null) {
+      isInvalid = true;
+    }
+  });
+  return isInvalid;
+};
+
+export const addNewUser = async (req: Request, res: Response) => {
   const { name, email, password } = JSON.parse(JSON.stringify(req.body));
   const saltRounds = 10;
 
-  bcrypt
-    .hash(password, saltRounds)
-    .then((hash) => {
-      pool
-        .query(
-          "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
-          [name, email, hash]
-        )
-        .then(() => res.status(201).json({ msg: "New user created!" }))
-        .catch((err) => res.status(500).json({ msg: err.message }));
-    })
-    .catch((err) => res.status(500).json({ msg: err.message }));
+  try {
+    if (checkEmptyStrings([name, email, password])) {
+      res.status(400);
+      throw new Error("Invalid credentials. Check all fields are filled.");
+    }
+
+    const hash = await bcrypt.hash(password, saltRounds);
+    const createdUser = await pool.query(
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
+      [name, email, hash]
+    );
+    if (createdUser) {
+      console.log(JWT_SECRET);
+      const { id } = createdUser.rows[0];
+      const token = jwt.sign(
+        {
+          id,
+          name,
+          email,
+        },
+        JWT_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+      res.status(201).json(token);
+    }
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
+  }
 };
 
 export const checkUser = async (req: Request, res: Response) => {
@@ -105,7 +137,7 @@ export const checkUser = async (req: Request, res: Response) => {
           name,
           email,
         },
-        "yolo",
+        JWT_SECRET,
         {
           expiresIn: "30d",
         }
@@ -116,6 +148,7 @@ export const checkUser = async (req: Request, res: Response) => {
       throw new Error("Invalid credentials");
     }
   } catch (error) {
-    res.status(500).json({ msg: error.message });
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
   }
 };
