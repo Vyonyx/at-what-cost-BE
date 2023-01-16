@@ -146,9 +146,9 @@ export const checkUser = async (req: Request, res: Response) => {
   const { email, password } = JSON.parse(JSON.stringify(req.body));
 
   try {
-    const user = await (
-      await pool.query(`SELECT * FROM users WHERE email = '${email}'`)
-    ).rows[0];
+    const user = await prisma.user.findFirstOrThrow({
+      where: { email },
+    });
 
     if (!user) {
       res.status(400);
