@@ -3,68 +3,90 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
 const pool = new Pool();
+const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-export const addFilter = (req: Request, res: Response) => {
-  const userID = req.params.user_id;
+export const addFilter = async (req: Request, res: Response) => {
+  const userId = Number(req.params.user_id);
   const { transaction, category } = req.body;
 
-  pool
-    .query(
-      `INSERT INTO filters (user_id, transaction, category) VALUES ($1, $2, $3)`,
-      [userID, transaction, category]
-    )
-    .then((results) =>
-      res.status(201).send(`New filter created for user ID: ${userID}`)
-    )
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+  try {
+    const result = await prisma.filter.create({
+      data: {
+        transaction,
+        category,
+        userId,
+      },
     });
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
+  } finally {
+    await prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
-export const getFilters = (req: Request, res: Response) => {
-  const userID = req.params.user_id;
-
-  pool
-    .query("SELECT * FROM filters WHERE user_id = $1", [userID])
-    .then((results) => res.status(200).json(results.rows))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+export const getFilters = async (req: Request, res: Response) => {
+  const userId = Number(req.params.user_id);
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+      include: {
+        filters: true,
+      },
     });
+    res.status(200).json(user.filters);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
+  } finally {
+    await prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
-export const editFilter = (req: Request, res: Response) => {
-  const filterID = req.params.filter_id;
+export const editFilter = async (req: Request, res: Response) => {
+  const filterId = Number(req.params.filter_id);
   const { transaction, category } = req.body;
 
-  pool
-    .query("UPDATE filters SET transaction = $1, category = $2 WHERE id = $3", [
-      transaction,
-      category,
-      filterID,
-    ])
-    .then((results) => res.send(200).send(`Filter ID: ${filterID} edited.`))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+  try {
+    const updatedFilter = await prisma.filter.update({
+      where: { id: filterId },
+      data: { transaction, category },
     });
+    res.status(200).json(updatedFilter);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
-export const deleteFilter = (req: Request, res: Response) => {
-  const filterID = req.params.filter_id;
+export const deleteFilter = async (req: Request, res: Response) => {
+  const filterId = Number(req.params.filter_id);
 
-  pool
-    .query("DELETE FROM filters WHERE id = $1", [filterID])
-    .then((results) => res.send(200).send(`Filter ID: ${filterID} deleted.`))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+  try {
+    const delFilter = await prisma.filter.delete({
+      where: { id: filterId },
     });
+    res.status(200).json(delFilter);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.messae });
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
 const checkEmptyStrings = (strArr: string[] | null[]) => {
@@ -88,13 +110,16 @@ export const addNewUser = async (req: Request, res: Response) => {
     }
 
     const hash = await bcrypt.hash(password, saltRounds);
-    const createdUser = await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
-      [name, email, hash]
-    );
+    const createdUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hash,
+      },
+    });
+
     if (createdUser) {
-      console.log(JWT_SECRET);
-      const { id } = createdUser.rows[0];
+      const { id } = createdUser;
       const token = jwt.sign(
         {
           id,
@@ -111,6 +136,9 @@ export const addNewUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error: ", error.message);
     res.status(400).json({ msg: error.message });
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
   }
 };
 
@@ -118,9 +146,9 @@ export const checkUser = async (req: Request, res: Response) => {
   const { email, password } = JSON.parse(JSON.stringify(req.body));
 
   try {
-    const user = await (
-      await pool.query(`SELECT * FROM users WHERE email = '${email}'`)
-    ).rows[0];
+    const user = await prisma.user.findFirstOrThrow({
+      where: { email },
+    });
 
     if (!user) {
       res.status(400);

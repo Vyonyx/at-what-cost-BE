@@ -13,8 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* Routes */
-app.use("/filters", filtersRouter);
-app.use("/users", usersRouter);
+app.use("/api/filters", filtersRouter);
+app.use("/api/users", usersRouter);
 
 app.get("/greet", (req, res) => {
   return res.send("Hello");
