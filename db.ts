@@ -53,21 +53,22 @@ export const getFilters = async (req: Request, res: Response) => {
   }
 };
 
-export const editFilter = (req: Request, res: Response) => {
-  const filterID = req.params.filter_id;
+export const editFilter = async (req: Request, res: Response) => {
+  const filterId = Number(req.params.filter_id);
   const { transaction, category } = req.body;
 
-  pool
-    .query("UPDATE filters SET transaction = $1, category = $2 WHERE id = $3", [
-      transaction,
-      category,
-      filterID,
-    ])
-    .then((results) => res.send(200).send(`Filter ID: ${filterID} edited.`))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+  try {
+    const updatedFilter = await prisma.filter.update({
+      where: { id: filterId },
+      data: { transaction, category },
     });
+    res.status(200).json(updatedFilter);
+  } catch (error) {
+    console.error("Error: ", error.message);
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
 export const deleteFilter = (req: Request, res: Response) => {
