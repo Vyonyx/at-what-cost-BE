@@ -110,13 +110,16 @@ export const addNewUser = async (req: Request, res: Response) => {
     }
 
     const hash = await bcrypt.hash(password, saltRounds);
-    const createdUser = await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
-      [name, email, hash]
-    );
+    const createdUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hash,
+      },
+    });
+
     if (createdUser) {
-      console.log(JWT_SECRET);
-      const { id } = createdUser.rows[0];
+      const { id } = createdUser;
       const token = jwt.sign(
         {
           id,
@@ -133,6 +136,9 @@ export const addNewUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error: ", error.message);
     res.status(400).json({ msg: error.message });
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
   }
 };
 
