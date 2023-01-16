@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const pool = new Pool();
 
@@ -90,11 +91,30 @@ export const checkUser = async (req: Request, res: Response) => {
     ).rows[0];
 
     if (!user) {
-      return res.status(400).json({ msg: "User not found" });
+      res.status(400);
+      throw new Error("User not found. Check credentials or sign up.");
     }
     const { password: hashedPassword } = user;
     const isUser = await bcrypt.compare(password, hashedPassword);
-    res.status(200).json(isUser);
+
+    if (isUser) {
+      const { id, name, email } = user;
+      const token = jwt.sign(
+        {
+          id,
+          name,
+          email,
+        },
+        "yolo",
+        {
+          expiresIn: "30d",
+        }
+      );
+      res.status(200).json(token);
+    } else {
+      res.status(400);
+      throw new Error("Invalid credentials");
+    }
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
