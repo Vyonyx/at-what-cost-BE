@@ -65,22 +65,28 @@ export const editFilter = async (req: Request, res: Response) => {
     res.status(200).json(updatedFilter);
   } catch (error) {
     console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
   } finally {
     prisma.$disconnect();
     process.exit(1);
   }
 };
 
-export const deleteFilter = (req: Request, res: Response) => {
-  const filterID = req.params.filter_id;
+export const deleteFilter = async (req: Request, res: Response) => {
+  const filterId = Number(req.params.filter_id);
 
-  pool
-    .query("DELETE FROM filters WHERE id = $1", [filterID])
-    .then((results) => res.send(200).send(`Filter ID: ${filterID} deleted.`))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+  try {
+    const delFilter = await prisma.filter.delete({
+      where: { id: filterId },
     });
+    res.status(200).json(delFilter);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.messae });
+  } finally {
+    prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
 const checkEmptyStrings = (strArr: string[] | null[]) => {
