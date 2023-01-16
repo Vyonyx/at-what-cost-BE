@@ -26,19 +26,31 @@ export const addFilter = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error: ", error.message);
     res.status(400).json({ msg: error.message });
+  } finally {
+    await prisma.$disconnect();
+    process.exit(1);
   }
 };
 
-export const getFilters = (req: Request, res: Response) => {
-  const userID = req.params.user_id;
-
-  pool
-    .query("SELECT * FROM filters WHERE user_id = $1", [userID])
-    .then((results) => res.status(200).json(results.rows))
-    .catch((error) => {
-      console.error(error);
-      res.status(400);
+export const getFilters = async (req: Request, res: Response) => {
+  const userId = Number(req.params.user_id);
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+      include: {
+        filters: true,
+      },
     });
+    res.status(200).json(user.filters);
+  } catch (error) {
+    console.error("Error: ", error.message);
+    res.status(400).json({ msg: error.message });
+  } finally {
+    await prisma.$disconnect();
+    process.exit(1);
+  }
 };
 
 export const editFilter = (req: Request, res: Response) => {
