@@ -82,7 +82,7 @@ export const deleteFilter = async (req: Request, res: Response) => {
     res.status(200).json(delFilter);
   } catch (error) {
     console.error("Error: ", error.message);
-    res.status(400).json({ msg: error.messae });
+    res.status(400).json({ msg: error.message });
   } finally {
     prisma.$disconnect();
     process.exit(1);
