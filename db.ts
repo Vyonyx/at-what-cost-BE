@@ -1,4 +1,3 @@
-import { Pool } from "pg";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -6,7 +5,6 @@ import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
-const pool = new Pool();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -28,7 +26,6 @@ export const addFilter = async (req: Request, res: Response) => {
     res.status(400).json({ msg: error.message });
   } finally {
     await prisma.$disconnect();
-    process.exit(1);
   }
 };
 
@@ -68,7 +65,6 @@ export const editFilter = async (req: Request, res: Response) => {
     res.status(400).json({ msg: error.message });
   } finally {
     prisma.$disconnect();
-    process.exit(1);
   }
 };
 
@@ -85,7 +81,6 @@ export const deleteFilter = async (req: Request, res: Response) => {
     res.status(400).json({ msg: error.message });
   } finally {
     prisma.$disconnect();
-    process.exit(1);
   }
 };
 
@@ -138,7 +133,6 @@ export const addNewUser = async (req: Request, res: Response) => {
     res.status(400).json({ msg: error.message });
   } finally {
     prisma.$disconnect();
-    process.exit(1);
   }
 };
 
@@ -178,5 +172,7 @@ export const checkUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error: ", error.message);
     res.status(400).json({ msg: error.message });
+  } finally {
+    prisma.$disconnect();
   }
 };
