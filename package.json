@@ -5,8 +5,12 @@
   "main": "dist/server.js",
   "scripts": {
     "start": "node ./dist/server.js",
-    "build": "npx tsc",
-    "dev": "nodemon server.ts"
+    "build": "npm run migrate:deploy && npx tsc",
+    "dev": "nodemon server.ts",
+    "migrate:dev": "prisma migrate dev --preview-feature",
+    "migrate:deploy": "prisma migrate deploy --preview-feature",
+    "migrate:status": "prisma migrate status --preview-feature",
+    "generate": "prisma generate"
   },
   "keywords": [],
   "author": "",

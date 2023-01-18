@@ -1,4 +1,5 @@
 node_modules
+dist
 queries.ts
 .env
 .eslintrc.json
