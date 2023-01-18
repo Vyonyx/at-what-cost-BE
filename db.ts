@@ -130,7 +130,11 @@ export const addNewUser = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error("Error: ", error.message);
-    res.status(400).json({ msg: error.message });
+    res
+      .status(400)
+      .send(
+        "User already exists. Try login if existing account or sign up with different credentials."
+      );
   } finally {
     prisma.$disconnect();
   }
@@ -171,7 +175,7 @@ export const checkUser = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error("Error: ", error.message);
-    res.status(400).json({ msg: error.message });
+    return res.status(400).send(error.message);
   } finally {
     prisma.$disconnect();
   }
