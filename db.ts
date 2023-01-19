@@ -126,7 +126,7 @@ export const addNewUser = async (req: Request, res: Response) => {
           expiresIn: "30d",
         }
       );
-      res.status(201).json({ name, email, token });
+      res.status(201).json({ name, email, id, token });
     }
   } catch (error) {
     console.error("Error: ", error.message);
@@ -168,7 +168,7 @@ export const checkUser = async (req: Request, res: Response) => {
           expiresIn: "30d",
         }
       );
-      res.status(200).json({ name, email, token });
+      res.status(200).json({ name, email, id, token });
     } else {
       res.status(400);
       throw new Error("Invalid credentials");
